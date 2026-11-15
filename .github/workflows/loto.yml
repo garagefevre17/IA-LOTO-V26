@@ -1,0 +1,24 @@
+
+name: IA LOTO - Controle automatique
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 21 * * 1,3,6'
+
+permissions:
+  contents: read
+
+jobs:
+  controle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer les fichiers
+        uses: actions/checkout@v4
+
+      - name: Verifier les fichiers
+        run: |
+          test -f index.html
+          test -f app.js
+          test -f data.js
+          echo "Fichiers presents"
