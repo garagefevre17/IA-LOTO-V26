@@ -1,0 +1,22 @@
+<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>IA LOTO V26 — Grille avant tirage</title><style>body{background:#0b182a;color:#edf6ff;font:16px system-ui;margin:auto;padding:22px;max-width:680px}section{border:1px solid #365676;background:#142a43;border-radius:15px;padding:18px;margin:14px 0}.balls{display:flex;gap:7px;flex-wrap:wrap}.ball{border-radius:50%;width:46px;height:46px;display:grid;place-items:center;background:#3285c1;font-weight:bold;font-size:20px}.chance{background:#bc4274}small{color:#bdd2e3}a{color:#9bd7ff}.warn{color:#ffd48c}</style><a href="index.html">← Laboratoire</a><h1>🧠 IA LOTO V26</h1><p>Grille proposée avant le tirage · Froids 300 figé</p><section><h2>Prochaine grille à jouer</h2><div id="balls" class="balls"><span class="warn">En attente d'une prévision serveur vérifiée</span></div><p id="date"></p><small id="proof">Aucune preuve d'antériorité.</small></section><section><h2>Autonomie et vérification</h2><p id="status">Chargement…</p><p id="count"></p><small>Les prévisions ne sont jamais garanties gagnantes. Un journal GitHub horodaté n'est admissible que si sa publication avant tirage est contrôlée indépendamment.</small></section><section><h2>Historique des prévisions</h2><div id="history">Aucun test disponible.</div></section><script>
+const el=id=>document.getElementById(id);
+function put(id,value){el(id).textContent=String(value)}
+fetch('v26-state.json?ts='+Date.now(),{cache:'no-store'})
+.then(r=>{if(!r.ok)throw Error('journal absent');return r.json()})
+.then(d=>{
+ put('status',d.message||'État inconnu');
+ put('count','Tests prospectifs validés : '+(d.validated||0)+'/30 · Résultats comparés : '+(d.examined||0));
+ const a=Array.isArray(d.predictions)?d.predictions.slice().reverse():[];
+ const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Paris'});
+ const next=d.configured?a.find(x=>!x.outcome && x.date>=today && Array.isArray(x.numbers) && x.numbers.length===5):null;
+ if(next){
+   el('balls').replaceChildren();
+   [...next.numbers,next.chance].forEach((n,i)=>{const ball=document.createElement('span');ball.className='ball'+(i===5?' chance':'');ball.textContent=String(n);el('balls').append(ball)});
+   put('date','Tirage du '+next.date+' · Calcul '+next.calculatedAt);
+   put('proof',(next.proof||'Preuve non certifiée')+' · Source jusqu’au '+next.inputLastDraw);
+ }else put('balls','Aucune grille actuelle vérifiée : ne pas jouer une prévision périmée.');
+ el('history').replaceChildren();
+ a.forEach(x=>{const p=document.createElement('p');p.textContent=x.date+' : '+(x.numbers||[]).join(' - ')+' | Chance '+x.chance+(x.outcome?' · '+x.outcome.matches+' bons numéros · Chance '+(x.outcome.chanceMatch?'oui':'non'):' · En attente')+' · Prospectif certifié : '+(x.prospectiveValidated?'oui':'non');el('history').append(p)});
+ if(!a.length)put('history','Aucune prévision');
+}).catch(e=>put('status','NON AUTONOME : '+e.message));
+</script></html>
